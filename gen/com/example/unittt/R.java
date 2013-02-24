@@ -24,8 +24,9 @@ public final class R {
         public static final int button8=0x7f070005;
         public static final int button9=0x7f070007;
         public static final int draw=0x7f07000e;
+        public static final int infotxt=0x7f07000f;
         public static final int lose=0x7f07000d;
-        public static final int menu_settings=0x7f07000f;
+        public static final int menu_settings=0x7f070010;
         public static final int textView1=0x7f07000a;
         public static final int textView2=0x7f070009;
         public static final int textView3=0x7f07000b;

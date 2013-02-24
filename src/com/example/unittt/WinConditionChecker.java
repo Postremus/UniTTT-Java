@@ -14,36 +14,19 @@ public class WinConditionChecker {
         RightDown
     }
 	
-	private int _winCondition;
-	private static WinConditionChecker _instance = new WinConditionChecker(3);
+	private static int _winCondition = 3;
 	
-	private WinConditionChecker()
-	{
-		_winCondition = 3;
-	}
-	
-	private WinConditionChecker(int condition)
-	{
-		_winCondition = condition;
-	}
-	
-	public static WinConditionChecker getInstance()
-	{
-		return GetInstance(3);
-	}
-	
-	public static WinConditionChecker GetInstance(int wincondition)
-	{
-		return _instance;
-	}
-	
-	public int GetWinCondition()
+	public static int GetWinCondition()
 	{
 		return _winCondition;
 	}
 	
+	public static void SetWinCondition(int to)
+	{
+		_winCondition = to;
+	}
 	
-	public Boolean Check(Player player, Field field)
+	public static Boolean Check(Player player, Field field)
 	{
 		//Horizontal
         for (int y = 0; y < field.GetHeight(); y++)
@@ -84,7 +67,7 @@ public class WinConditionChecker {
         return false;
 	}
 	
-	private int DoCheck(Field field, Directories dir, char player, Vector2i from)
+	private static int DoCheck(Field field, Directories dir, char player, Vector2i from)
     {
         int counter = 0;
         for (int a = 0; a < _winCondition; a++)
@@ -97,7 +80,7 @@ public class WinConditionChecker {
         return counter;
     }
 
-	private Vector2i NextField(Directories dir, Vector2i vect)
+	private static Vector2i NextField(Directories dir, Vector2i vect)
     {
         if (dir == Directories.Right)
             vect.x++;

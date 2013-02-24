@@ -11,7 +11,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class Game extends Activity implements IGameStateListener, IWinCounterListener, IGameFieldClearerListener, IEnemyTurnStateChangedListener, IGameFieldUpdateIndicator{
+public class Game extends Activity implements IGameStateListener, IWinCounterListener, IGameFieldClearerListener, IEnemyTurnStateChangedListener, IGameFieldUpdateIndicator, IPlayerChangedListener{
 
 	private GameLogik _game;
 	private Boolean _hasEnd;
@@ -24,6 +24,7 @@ public class Game extends Activity implements IGameStateListener, IWinCounterLis
 		setContentView(R.layout.activity_game);
 		
 		_game = new GameLogik(new Player('X'), new AIPlayer('O'), new Field(3, 3));
+		PlayerChange();
 		
 		_hasEnd = false;
 		_enemyTurn = false;
@@ -31,6 +32,7 @@ public class Game extends Activity implements IGameStateListener, IWinCounterLis
 		_game.GetWinCounterSource().Add(this);
 		_game.GetGameFieldClearer().Add(this);
 		_game.GetGameFieldUpdateIndicatorSource().Add(this);
+		_game.GetPlayerChangedSource().Add(this);
 		
 		buttons = new ArrayList<Button>();
 		List<Integer> buttonsId = new ArrayList<Integer>();
@@ -114,38 +116,49 @@ public class Game extends Activity implements IGameStateListener, IWinCounterLis
 	}
 
 	@Override
-	public void RefreshgameState(GameStates state) {
+	public void RefreshgameState(final GameStates state) {
 		// TODO Auto-generated method stub
 		_hasEnd = state != GameStates.Laufend;
-		Toast t;
-		if (state == GameStates.Unentschieden)
+		((TextView)findViewById(R.id.win)).post(new Runnable() 
 		{
-			t = Toast.makeText(getBaseContext(), "Unentschieden.", Toast.LENGTH_SHORT);
-		}
-		else if (state == GameStates.Gewonnen)
-		{
-			t = Toast.makeText(getBaseContext(), "Du hast gewonnen. :)", Toast.LENGTH_SHORT);
-		}
-		else if (state == GameStates.Verloren)
-		{
-			t = Toast.makeText(getBaseContext(), "Du hast verloren. :(", Toast.LENGTH_SHORT);
-		}
-		else
-		{
-			t = Toast.makeText(getBaseContext(), "Du hast gar nichts!", Toast.LENGTH_SHORT);
-		}
-		t.show();
-		
+			public void run()
+			{
+				Toast t;
+				if (state == GameStates.Unentschieden)
+				{
+					t = Toast.makeText(getBaseContext(), "Unentschieden.", Toast.LENGTH_SHORT);
+				}
+				else if (state == GameStates.Gewonnen)
+				{
+					t = Toast.makeText(getBaseContext(), "Du hast gewonnen. :)", Toast.LENGTH_SHORT);
+				}
+				else if (state == GameStates.Verloren)
+				{
+					t = Toast.makeText(getBaseContext(), "Du hast verloren. :(", Toast.LENGTH_SHORT);
+				}
+				else
+				{
+					t = Toast.makeText(getBaseContext(), "Du hast gar nichts!", Toast.LENGTH_SHORT);
+				}
+				t.show();			}
+		});		
 	}
 
 	@Override
 	public void WinCounterChanged() {
-		int player1Counter = _game.GetPlayer1().GetWinCounter();
-		int player2Counter = _game.GetPlayer2().GetWinCounter();
+		final int player1Counter = _game.GetPlayer1().GetWinCounter();
+		final int player2Counter = _game.GetPlayer2().GetWinCounter();
 		
-		((TextView)findViewById(R.id.win)).setText(String.valueOf(player1Counter));
-		((TextView)findViewById(R.id.lose)).setText(String.valueOf(player2Counter));
-		((TextView)findViewById(R.id.draw)).setText(String.valueOf(_game.GetGamesPlayed()-player1Counter-player2Counter));
+		((TextView)findViewById(R.id.win)).post(new Runnable() 
+		{
+			public void run()
+			{
+				((TextView)findViewById(R.id.win)).setText(String.valueOf(player1Counter));
+				((TextView)findViewById(R.id.lose)).setText(String.valueOf(player2Counter));
+				((TextView)findViewById(R.id.draw)).setText(String.valueOf(_game.GetGamesPlayed()-player1Counter-player2Counter));
+				((TextView)findViewById(R.id.infotxt)).setText("Zum Neustart klicken");
+			}
+		});
 	}
 	
 	public void ActivityGameClicked(View view)
@@ -163,6 +176,7 @@ public class Game extends Activity implements IGameStateListener, IWinCounterLis
 			btn.setText("");
 		}
 		_hasEnd = false;
+		PlayerChange();
 	}
 
 	@Override
@@ -181,6 +195,23 @@ public class Game extends Activity implements IGameStateListener, IWinCounterLis
 				{
 					buttons.get(i).setText(String.valueOf(_game.GetField().GetField(i)));
 				}
+			}
+		});
+	}
+
+	@Override
+	public void PlayerChange() {
+		// TODO Auto-generated method stub
+		((TextView)findViewById(R.id.win)).post(new Runnable() 
+		{
+			public void run()
+			{
+				String typ = "Spieler";
+				if (_game.GetPlayer() == _game.GetPlayer2())
+				{
+					typ = "Gegner";
+				}
+				((TextView)findViewById(R.id.infotxt)).setText(typ + " " + String.valueOf(_game.GetPlayer().GetSymbol()) + " ist an der Reihe.");
 			}
 		});
 	}

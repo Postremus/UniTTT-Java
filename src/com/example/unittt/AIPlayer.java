@@ -35,7 +35,7 @@ public class AIPlayer extends Player{
             if (field.IsFieldEmpty(playerpos))
             {
                 field.SetField(playerpos, player);
-                if ((WinConditionChecker.getInstance().Check(new Player(player), field)))
+                if ((WinConditionChecker.Check(new Player(player), field)))
                     ret = playerpos;
                 field.SetField(playerpos, ' ');
             }
@@ -51,7 +51,7 @@ public class AIPlayer extends Player{
 
         for (FieldRegion region : fpanel)
         {
-            if (region.Count() >= WinConditionChecker.getInstance().GetWinCondition())
+            if (region.Count() >= WinConditionChecker.GetWinCondition())
             {
                 for (FieldPlaceData data : region)
                 {
