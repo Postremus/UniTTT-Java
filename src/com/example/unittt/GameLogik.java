@@ -10,6 +10,13 @@ public class GameLogik implements IPlayerMovedListener {
 	private Field _field;
 	private WinConditionChecker _winChecker;
 	private GameStateSource _stateSource;
+	private WinCounterSource _counterSource;
+	private GameFieldClearerSource _fieldClearerSource;
+	private Boolean _waitingForEnemy;
+	private int _gamesPlayed;
+	private EnemyThread _enemyThread;
+	private EnemyTurnStateChangedSource _turnStateChangedSource;
+	private GameFieldUpdateIndicatorSource _updateIndicator;
 	
 	public GameLogik(Player player1, Player player2, Field field)
 	{
@@ -20,13 +27,44 @@ public class GameLogik implements IPlayerMovedListener {
 		_player1 = player1;
 		_player2 = player2;
 		_field = field;
-		_winChecker = new WinConditionChecker(field.GetWidth());
+		_winChecker = WinConditionChecker.GetInstance(field.GetWidth());
 		_stateSource = new GameStateSource();
+		_counterSource = new WinCounterSource();
+		_fieldClearerSource = new GameFieldClearerSource();
+		_enemyThread = new EnemyThread();
+		_turnStateChangedSource = new EnemyTurnStateChangedSource();
+		_updateIndicator = new GameFieldUpdateIndicatorSource();
+		_gamesPlayed = 1;
 	}
 	
 	public GameStateSource GetGameStateSource()
 	{
 		return _stateSource;
+	}
+	
+	public WinCounterSource GetWinCounterSource()
+	{
+		return _counterSource;
+	}
+	
+	public GameFieldClearerSource GetGameFieldClearer()
+	{
+		return _fieldClearerSource;
+	}
+	
+	public EnemyTurnStateChangedSource GetEnemyTurnStateChangedSource()
+	{
+		return _turnStateChangedSource;
+	}
+	
+	public GameFieldUpdateIndicatorSource GetGameFieldUpdateIndicatorSource()
+	{
+		return _updateIndicator;
+	}
+	
+	public int GetGamesPlayed()
+	{
+		return _gamesPlayed;
 	}
 	
 	public Player GetPlayer()
@@ -44,14 +82,57 @@ public class GameLogik implements IPlayerMovedListener {
 		return _player2;
 	}
 	
+	public Boolean GetWaitingForEnemy()
+	{
+		return _waitingForEnemy;
+	}
+	
+	public Field GetField()
+	{
+		return _field;
+	}
+	
 	public void Logik(Vector2i p)
 	{
+		if (!_field.IsFieldEmpty(p))
+		{
+			return;
+		}
 		_field.SetField(p, _player.GetSymbol());
+		_updateIndicator.FireEvent();
 		if (HasEnd())
 		{
-			_stateSource.FireEvent(GetGameState());
+			GameStates state = GetGameState();
+			if (state == GameStates.Gewonnen)
+			{
+				_player1.SetWinCounter(_player1.GetWinCounter()+1);
+			}
+			else if (state == GameStates.Verloren)
+			{
+				_player2.SetWinCounter(_player1.GetWinCounter()+1);
+			}
+			this._counterSource.FireEvent();
+			_stateSource.FireEvent(state);
+			return;
 		}
 		PlayerTausch();
+		
+		if (_player instanceof AIPlayer)
+		{
+			this._turnStateChangedSource.FireEvent(true);
+			_enemyThread.SetEnemy(_player);
+			_enemyThread.SetField(_field.Clone());
+			Thread t = new Thread(_enemyThread);
+			t.start();
+		}
+	}
+	
+	public void RestartGame()
+	{
+		_player = _player1;
+		_field = new Field(_field.GetWidth(), _field.GetHeight());
+		_fieldClearerSource.FireEvent();
+		_gamesPlayed++;
 	}
 	
 	public Boolean HasEnd()
@@ -74,7 +155,7 @@ public class GameLogik implements IPlayerMovedListener {
         {
             if (_winChecker.Check(p, _field))
             {
-                if (_player.GetSymbol() == p.GetSymbol())
+                if (_player.GetSymbol() == _player1.GetSymbol())
                 {
                     return GameStates.Gewonnen;
                 }
@@ -99,6 +180,10 @@ public class GameLogik implements IPlayerMovedListener {
 
 	@Override
 	public void PlayerMoved(Vector2i p) {
+		if (_player instanceof AIPlayer)
+		{
+			this._turnStateChangedSource.FireEvent(false);
+		}
 		Logik(p);
 	}
 }

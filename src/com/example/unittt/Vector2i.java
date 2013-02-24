@@ -29,4 +29,9 @@ public class Vector2i {
         }
         return vect;
 	}
+	
+	public int ToIndex(int width)
+	{
+		return x * width + y;
+	}
 }
