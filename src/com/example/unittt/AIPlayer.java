@@ -15,14 +15,23 @@ public class AIPlayer extends Player{
         int block_zug = TestForLineComplettings(field, Player.PlayerChange(super.GetSymbol()));
         int set_zug = TestForBestPosition(field);
 
-        int ret;
+        int ret = -1;
         if (win_zug != -1)
-        	ret = win_zug;
-        else if (block_zug != -1)
-        	ret = block_zug;
-        else if (set_zug != -1)
-        	ret = set_zug;
-        else
+        	if (field.IsFieldEmpty(win_zug))
+        	{
+        		ret = win_zug;
+        	}
+        if (block_zug != -1 && ret == -1)
+        	if (field.IsFieldEmpty(block_zug))
+        	{
+        		ret = block_zug;
+        	}
+        if (set_zug != -1  && ret == -1)
+        	if (field.IsFieldEmpty(set_zug))
+        	{
+        		ret = set_zug;
+        	}
+        if (ret == -1)
         	ret = FieldHelper.GetRandomMove(field);
         super.GetMovedSource().FireEvent(Vector2i.FromIndex(ret, field.GetWidth(), field.GetHeight()));
 	}
